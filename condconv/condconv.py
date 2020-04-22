@@ -98,8 +98,11 @@ class CondConv2D(_ConvNd):
 
     def forward(self, input):
         pooled_inputs = self._avg_pooling(input)  # routing function step 1 (Page 3 button)
+        # pooled_inputs.shape = [1, c, h, w]
         routing_weights = self._routing_fn(pooled_inputs) # routing function step 2 & 3 (Page 3 button)
+        # routing_weights.shape = [num_experts]
         kernels = torch.sum(routing_weights[:,None, None, None, None] * self.weight, 0)  # (a1W1 + ... + anWn)
-
+        # [num_experts, 1, 1, 1, 1] x [num_experts, out_channels, in_channels // groups, kernel_h, kernel_w]
+        # kernels.shape =  [out_channels, in_channels // groups, kernel_h, kernel_w]
         return self._conv_forward(input, kernels)
 
